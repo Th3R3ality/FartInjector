@@ -61,13 +61,13 @@ int main()
     }
     
     const char* szGetProcAddress = "GetProcAddress\0";
-    const char* szLoadLibraryA = "LoadLibraryA\0";
+    const char* szLoadLibraryW = "LoadLibraryA\0";
 
     void* shellcodeMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, sizeof(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    void* szLoadLibraryAMem = VirtualAllocEx(processHandle, NULL, sizeof(szLoadLibraryA), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, sizeof(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     
-    if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryAMem == nullptr)
+    if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
     {
         std::cout << "Error allocating memory in target process\n";
         return 4;
@@ -77,16 +77,12 @@ int main()
 
     WriteProcessMemory(processHandle, shellcodeMem, shellcode, sizeof(shellcode), NULL);
     WriteProcessMemory(processHandle, shellcodeMem, &szGetProcAddressMem, sizeof(void*), NULL);
-    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*)), &szLoadLibraryAMem, sizeof(void*), NULL);
+    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*)), &szLoadLibraryWMem, sizeof(void*), NULL);
 
     WriteProcessMemory(processHandle, szGetProcAddressMem, szGetProcAddress, strlen(szGetProcAddress), NULL);
-    WriteProcessMemory(processHandle, szLoadLibraryAMem, szLoadLibraryA, strlen(szLoadLibraryA), NULL);
-
-    while (!GetAsyncKeyState(VK_NUMPAD0)){}
+    WriteProcessMemory(processHandle, szLoadLibraryWMem, szLoadLibraryW, strlen(szLoadLibraryW), NULL);
 
     CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*)*2), NULL, 0, NULL);
-
-    while (!GetAsyncKeyState(VK_NUMPAD2)){}
 
     CloseHandle(processHandle);
 
