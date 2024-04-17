@@ -12,9 +12,72 @@
 void PrintProcessNameAndID(DWORD processID);
 BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lParam);
 
-int main()
+
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-    std::cout << "Hello World!\n";
+    // define window class
+    WNDCLASSEX wc;
+    ZeroMemory(&wc, sizeof(WNDCLASSEX));
+
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = WindowProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = hInstance;
+    wc.hIcon = NULL;
+    wc.hCursor = LoadCursor(NULL, IDC_NO);
+    wc.hbrBackground;
+    wc.lpszMenuName;
+    wc.lpszClassName = L"FartInjectorWindowClass";
+    wc.hIconSm;
+
+    // register the window class
+    RegisterClassEx(&wc);
+
+    RECT wr = { 0, 0, 800, 600 };
+    HWND hwnd;
+
+    // create the window and use the result as the handle
+    hwnd = CreateWindowExW(
+        NULL, //( WS_EX_TOPMOST | WS_EX_NOACTIVATE),
+        wc.lpszClassName,    // name of the window class
+        L"Fart Injector",   // title of the window
+        WS_OVERLAPPEDWINDOW,    // window style //WS_POPUP
+        300,    // x-position of the window
+        300,    // y-position of the window
+        wr.right - wr.left,    // width of the window
+        wr.bottom - wr.top,    // height of the window
+        NULL,    // we have no parent window, NULL
+        NULL,    // we aren't using menus, NULL
+        hInstance,    // application handle
+        NULL);    // used with multiple windows, NULL
+    ShowWindow(hwnd, nCmdShow); // make sure window is shown
+
+    AllocConsole();
+    SetConsoleTitleW(L"DEBUG OUTPUT");
+
+    typedef FILE* PFILE;
+    PFILE fin, fout, ferr;
+    freopen_s(&fin, "CONIN$", "r", stdin);
+    freopen_s(&fout, "CONOUT$", "w", stdout);
+    freopen_s(&ferr, "CONOUT$", "w", stderr);
+    printf("yoo!\n");
+
+    MSG msg{};
+    while (true && !GetAsyncKeyState(VK_ESCAPE))
+    {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+
+            if (msg.message == WM_QUIT)
+                break;
+        }
+    }
+
 
     DWORD aProcesses[1024], cbNeeded, cProcesses;
     unsigned int i;
@@ -48,6 +111,7 @@ int main()
     if (!(selection < pids.size()))
     {
         std::cout << "<unknown target>\n";
+        DebugBreak();
         return 2;
     }
 
@@ -57,6 +121,7 @@ int main()
     if (processHandle == NULL)
     {
         std::cout << "Error opening process handle\n";
+        DebugBreak();
         return 3;
     }
     
@@ -70,6 +135,7 @@ int main()
     if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
     {
         std::cout << "Error allocating memory in target process\n";
+        DebugBreak();
         return 4;
     }
 
@@ -137,4 +203,40 @@ BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lParam)
     windowCount++;
     (*(std::vector<DWORD>*)(lParam)).push_back(pid);
     return TRUE;
+}
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_PAINT:
+    {
+        PAINTSTRUCT paint;
+        HDC hdc = BeginPaint(hwnd, &paint);
+        if (hdc)
+        {
+            GrayStringA(
+                hdc,
+                NULL,
+                NULL,
+                (LPARAM)"hello",
+                5,
+                100,
+                100,
+                20,
+                20
+            );
+
+            EndPaint(hwnd, &paint);
+        }
+        return 0;
+        break;
+    }
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+        break;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
 }
