@@ -66,7 +66,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     printf("yoo!\n");
 
     MSG msg{};
-    while (true && !GetAsyncKeyState(VK_ESCAPE))
+    while (!GetAsyncKeyState(VK_ESCAPE))
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
@@ -78,79 +78,78 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         }
     }
 
+    //DWORD aProcesses[1024], cbNeeded, cProcesses;
+    //unsigned int i;
 
-    DWORD aProcesses[1024], cbNeeded, cProcesses;
-    unsigned int i;
 
+    //if (!K32EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
+    //{
+    //    return 1;
+    //}
 
-    if (!K32EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
-    {
-        return 1;
-    }
+    //cProcesses = cbNeeded / sizeof(DWORD);
 
-    cProcesses = cbNeeded / sizeof(DWORD);
+    //for (i = 0; i < cProcesses; i++)
+    //{
+    //    if (aProcesses[i] != 0)
+    //    {
+    //        PrintProcessNameAndID(aProcesses[i]);
+    //    }
+    //}
 
-    for (i = 0; i < cProcesses; i++)
-    {
-        if (aProcesses[i] != 0)
-        {
-            PrintProcessNameAndID(aProcesses[i]);
-        }
-    }
+    //std::cout << "\n\n\n";
 
-    std::cout << "\n\n\n";
+    //std::vector<DWORD> pids;
+    //EnumWindows(EnumWindowCallback, (LPARAM)(&pids));
 
-    std::vector<DWORD> pids;
-    EnumWindows(EnumWindowCallback, (LPARAM)(&pids));
+    //DWORD selection = 0;
+    //std::cout << "Target: ";
+    //std::cin >> selection;
+    //
+    //HANDLE processHandle = NULL;
+    //if (!(selection < pids.size()))
+    //{
+    //    std::cout << "<unknown target>\n";
+    //    DebugBreak();
+    //    return 2;
+    //}
 
-    DWORD selection = 0;
-    std::cout << "Target: ";
-    std::cin >> selection;
-    
-    HANDLE processHandle = NULL;
-    if (!(selection < pids.size()))
-    {
-        std::cout << "<unknown target>\n";
-        DebugBreak();
-        return 2;
-    }
+    //std::cout << "<targetting : " << pids.at(selection) << ">\n";
+    //processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pids.at(selection));
 
-    std::cout << "<targetting : " << pids.at(selection) << ">\n";
-    processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pids.at(selection));
+    //if (processHandle == NULL)
+    //{
+    //    std::cout << "Error opening process handle\n";
+    //    DebugBreak();
+    //    return 3;
+    //}
+    //
+    //const char* szGetProcAddress = "GetProcAddress\0";
+    //const char* szLoadLibraryW = "LoadLibraryA\0";
 
-    if (processHandle == NULL)
-    {
-        std::cout << "Error opening process handle\n";
-        DebugBreak();
-        return 3;
-    }
-    
-    const char* szGetProcAddress = "GetProcAddress\0";
-    const char* szLoadLibraryW = "LoadLibraryA\0";
+    //void* shellcodeMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    //void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, sizeof(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    //void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, sizeof(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    //
+    //if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
+    //{
+    //    std::cout << "Error allocating memory in target process\n";
+    //    DebugBreak();
+    //    return 4;
+    //}
 
-    void* shellcodeMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, sizeof(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, sizeof(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    
-    if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
-    {
-        std::cout << "Error allocating memory in target process\n";
-        DebugBreak();
-        return 4;
-    }
+    //std::cout << "started nuking at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 2) << ">\n";
 
-    std::cout << "started nuking at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 2) << ">\n";
+    //WriteProcessMemory(processHandle, shellcodeMem, shellcode, sizeof(shellcode), NULL);
+    //WriteProcessMemory(processHandle, shellcodeMem, &szGetProcAddressMem, sizeof(void*), NULL);
+    //WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*)), &szLoadLibraryWMem, sizeof(void*), NULL);
 
-    WriteProcessMemory(processHandle, shellcodeMem, shellcode, sizeof(shellcode), NULL);
-    WriteProcessMemory(processHandle, shellcodeMem, &szGetProcAddressMem, sizeof(void*), NULL);
-    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*)), &szLoadLibraryWMem, sizeof(void*), NULL);
+    //WriteProcessMemory(processHandle, szGetProcAddressMem, szGetProcAddress, strlen(szGetProcAddress), NULL);
+    //WriteProcessMemory(processHandle, szLoadLibraryWMem, szLoadLibraryW, strlen(szLoadLibraryW), NULL);
 
-    WriteProcessMemory(processHandle, szGetProcAddressMem, szGetProcAddress, strlen(szGetProcAddress), NULL);
-    WriteProcessMemory(processHandle, szLoadLibraryWMem, szLoadLibraryW, strlen(szLoadLibraryW), NULL);
+    //CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*)*2), NULL, 0, NULL);
 
-    CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*)*2), NULL, 0, NULL);
-
-    CloseHandle(processHandle);
+    //CloseHandle(processHandle);
 
     return 0;
 }
@@ -211,23 +210,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_PAINT:
     {
-        PAINTSTRUCT paint;
-        HDC hdc = BeginPaint(hwnd, &paint);
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
         if (hdc)
         {
-            GrayStringA(
-                hdc,
-                NULL,
-                NULL,
-                (LPARAM)"hello",
-                5,
-                100,
-                100,
-                20,
-                20
-            );
+            HBRUSH brush = CreateSolidBrush(COLORREF(0x00ff5000));
+            FillRect(hdc, &ps.rcPaint, brush);
 
-            EndPaint(hwnd, &paint);
+            EndPaint(hwnd, &ps);
         }
         return 0;
         break;
