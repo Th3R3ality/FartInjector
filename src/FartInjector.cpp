@@ -12,7 +12,7 @@ BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lParam);
 
 int main( int argc, char** argv)
 {
-    printf("yoo!\n");
+    printf("yoo!\n\n");
 
     if (argc <= 1)
     {
@@ -20,6 +20,12 @@ int main( int argc, char** argv)
         DebugBreak();
         return -1;
     }
+
+    for (int idx = 0; idx < argc; idx++)
+    {
+        std::cout << argv[idx] << "\n";
+    }
+    std::cout << std::endl;
 
     DWORD aProcesses[1024], cbNeeded, cProcesses;
     unsigned int i;
@@ -37,7 +43,7 @@ int main( int argc, char** argv)
     {
         if (aProcesses[i] != 0)
         {
-            PrintProcessNameAndID(aProcesses[i]);
+            //PrintProcessNameAndID(aProcesses[i]);
         }
     }
 
@@ -68,15 +74,16 @@ int main( int argc, char** argv)
         return 3;
     }
     
-    const char* szDllPath = argv[1];
     
 
     const char* szGetProcAddress = "GetProcAddress\0";
     const char* szLoadLibraryW = "LoadLibraryA\0";
+    const char* szDllPath = argv[1];
 
     void* shellcodeMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, sizeof(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, sizeof(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, strlen(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, strlen(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* szDllPathMem = VirtualAllocEx(processHandle, NULL, strlen(szDllPath), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     
     if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
     {
@@ -85,16 +92,26 @@ int main( int argc, char** argv)
         return 4;
     }
 
-    std::cout << "started nuking at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 2) << ">\n";
+    std::cout << "started nuking at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 3) << ">\n";
 
     WriteProcessMemory(processHandle, shellcodeMem, shellcode, sizeof(shellcode), NULL);
-    WriteProcessMemory(processHandle, shellcodeMem, &szGetProcAddressMem, sizeof(void*), NULL);
-    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*)), &szLoadLibraryWMem, sizeof(void*), NULL);
+    WriteProcessMemory(processHandle, shellcodeMem, &szDllPathMem, sizeof(void*), NULL);
+    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*) * 1), &szGetProcAddressMem, sizeof(void*), NULL);
+    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*) * 2), &szLoadLibraryWMem, sizeof(void*), NULL);
 
+    WriteProcessMemory(processHandle, szDllPathMem, szDllPath, strlen(szDllPath), NULL);
     WriteProcessMemory(processHandle, szGetProcAddressMem, szGetProcAddress, strlen(szGetProcAddress), NULL);
     WriteProcessMemory(processHandle, szLoadLibraryWMem, szLoadLibraryW, strlen(szLoadLibraryW), NULL);
 
-    CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*)*2), NULL, 0, NULL);
+    std::cout << "press enter to execute shellcode\n";
+    std::cin.get();
+    std::cin.clear();
+
+#ifdef _DEBUG
+    DebugBreak();
+#endif // _DEBUG
+
+    CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*) * 3), NULL, 0, NULL);
 
     CloseHandle(processHandle);
 
