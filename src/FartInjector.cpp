@@ -4,7 +4,8 @@
 #include <vector>
 #include <string>
 
-#include "shellcode.h"
+#include "methods.h"
+#include "shellcodes.h"
 
 void PrintProcessNameAndID(DWORD processID);
 BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lParam);
@@ -52,68 +53,42 @@ int main( int argc, char** argv)
     std::vector<DWORD> pids;
     EnumWindows(EnumWindowCallback, (LPARAM)(&pids));
 
-    DWORD selection = 0;
     std::cout << "Target: ";
-    std::cin >> selection;
-    
-    HANDLE processHandle = NULL;
-    if (!(selection < pids.size()))
+
+    DWORD pidSelection = 0;
+    std::cin >> pidSelection;
+    if (!(pidSelection < pids.size()))
     {
         std::cout << "<unknown target>\n";
         DebugBreak();
         return 2;
     }
 
-    std::cout << "<targetting : " << pids.at(selection) << ">\n";
-    processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pids.at(selection));
+    std::cout << "\n<targetting : " << pids.at(pidSelection) << ">\n\n";
+    
+    std::cout << "        >Injection Method<\n";
+    std::cout << " [1] shellcode + CreateRemoteThread\n";
+    std::cout << " [2] CreateRemoteThread + 1 String \n";
 
-    if (processHandle == NULL)
+    std::cout << "Method: ";
+
+
+    DWORD methodSelection = 0;
+    std::cin >> methodSelection;
+
+    switch (methodSelection)
     {
-        std::cout << "Error opening process handle\n";
-        DebugBreak();
-        return 3;
-    }
-    
-    
-
-    const char* szGetProcAddress = "GetProcAddress\0";
-    const char* szLoadLibraryW = "LoadLibraryA\0";
-    const char* szDllPath = argv[1];
-
-    void* shellcodeMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, strlen(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, strlen(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    void* szDllPathMem = VirtualAllocEx(processHandle, NULL, strlen(szDllPath), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    
-    if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
-    {
-        std::cout << "Error allocating memory in target process\n";
-        DebugBreak();
-        return 4;
+    case 1:
+        method1::inject(argv[1], pids.at(pidSelection));
+        break;
+    case 2:
+        method2::inject(argv[1], pids.at(pidSelection));
+        break;
+    default:
+        std::cout << "method not found\n";
+        break;
     }
 
-    std::cout << "started nuking at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 3) << ">\n";
-
-    WriteProcessMemory(processHandle, shellcodeMem, shellcode, sizeof(shellcode), NULL);
-    WriteProcessMemory(processHandle, shellcodeMem, &szDllPathMem, sizeof(void*), NULL);
-    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*) * 1), &szGetProcAddressMem, sizeof(void*), NULL);
-    WriteProcessMemory(processHandle, (void*)((DWORD64)shellcodeMem + sizeof(void*) * 2), &szLoadLibraryWMem, sizeof(void*), NULL);
-
-    WriteProcessMemory(processHandle, szDllPathMem, szDllPath, strlen(szDllPath), NULL);
-    WriteProcessMemory(processHandle, szGetProcAddressMem, szGetProcAddress, strlen(szGetProcAddress), NULL);
-    WriteProcessMemory(processHandle, szLoadLibraryWMem, szLoadLibraryW, strlen(szLoadLibraryW), NULL);
-
-    std::cout << "press enter to execute shellcode\n";
-    std::cin.get();
-    std::cin.clear();
-
-#ifdef _DEBUG
-    DebugBreak();
-#endif // _DEBUG
-
-    CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*) * 3), NULL, 0, NULL);
-
-    CloseHandle(processHandle);
 
     return 0;
 }

@@ -150,7 +150,8 @@
     <ClCompile Include="src\FartInjector.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\shellcode.h" />
+    <ClInclude Include="src\methods.h" />
+    <ClInclude Include="src\shellcodes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
