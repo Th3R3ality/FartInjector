@@ -76,14 +76,14 @@ int main( int argc, char** argv)
     
     
 
+    const char* szDllPath = argv[1];
     const char* szGetProcAddress = "GetProcAddress\0";
     const char* szLoadLibraryW = "LoadLibraryA\0";
-    const char* szDllPath = argv[1];
 
     void* shellcodeMem = VirtualAllocEx(processHandle, NULL, sizeof(shellcode), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    void* szDllPathMem = VirtualAllocEx(processHandle, NULL, strlen(szDllPath), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     void* szGetProcAddressMem = VirtualAllocEx(processHandle, NULL, strlen(szGetProcAddress), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     void* szLoadLibraryWMem = VirtualAllocEx(processHandle, NULL, strlen(szLoadLibraryW), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    void* szDllPathMem = VirtualAllocEx(processHandle, NULL, strlen(szDllPath), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     
     if (shellcodeMem == nullptr || szGetProcAddressMem == nullptr || szLoadLibraryWMem == nullptr)
     {
@@ -114,7 +114,6 @@ int main( int argc, char** argv)
     CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD64)shellcodeMem + sizeof(void*) * 3), NULL, 0, NULL);
 
     CloseHandle(processHandle);
-
     return 0;
 }
 
