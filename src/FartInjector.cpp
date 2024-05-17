@@ -68,9 +68,9 @@ int main( int argc, char** argv)
     
     std::cout << "        >Injection Method<\n";
     std::cout << " [1] shellcode + CreateRemoteThread\n";
-    std::cout << " [2] CreateRemoteThread + 1 String \n";
+    std::cout << " [2] CreateRemoteThread @ LoadLibraryA\n";
 
-    std::cout << "Method: ";
+    std::cout << ">";
 
 
     DWORD methodSelection = 0;
