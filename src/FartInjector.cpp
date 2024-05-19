@@ -10,11 +10,8 @@
 void PrintProcessNameAndID(DWORD processID);
 BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lParam);
 
-
 int main( int argc, char** argv)
 {
-    printf("yoo!\n\n");
-
     if (argc <= 1)
     {
         std::cout << "low arg count\n";
@@ -22,31 +19,33 @@ int main( int argc, char** argv)
         return -1;
     }
 
+    printf("yoo!\n\n");
+
+
     for (int idx = 0; idx < argc; idx++)
     {
         std::cout << argv[idx] << "\n";
     }
     std::cout << std::endl;
 
-    DWORD aProcesses[1024], cbNeeded, cProcesses;
-    unsigned int i;
+    //DWORD aProcesses[1024], cbNeeded, cProcesses;
+    //unsigned int i;
 
+    //if (!K32EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
+    //{
+    //    DebugBreak();
+    //    return 1;
+    //}
 
-    if (!K32EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
-    {
-        DebugBreak();
-        return 1;
-    }
+    //cProcesses = cbNeeded / sizeof(DWORD);
 
-    cProcesses = cbNeeded / sizeof(DWORD);
-
-    for (i = 0; i < cProcesses; i++)
-    {
-        if (aProcesses[i] != 0)
-        {
-            //PrintProcessNameAndID(aProcesses[i]);
-        }
-    }
+    //for (i = 0; i < cProcesses; i++)
+    //{
+    //    if (aProcesses[i] != 0)
+    //    {
+    //        //PrintProcessNameAndID(aProcesses[i]);
+    //    }
+    //}
 
     std::cout << "\n\n\n";
 
@@ -57,7 +56,7 @@ int main( int argc, char** argv)
 
     DWORD pidSelection = 0;
     std::cin >> pidSelection;
-    if (!(pidSelection < pids.size()))
+    if (!(pidSelection < pids.size() && pidSelection < 0))
     {
         std::cout << "<unknown target>\n";
         DebugBreak();
