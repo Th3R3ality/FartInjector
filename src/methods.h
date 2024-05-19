@@ -8,18 +8,6 @@ namespace method2
     bool inject(const char* dllPath, DWORD targetPid)
     {
         HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetPid);
-        void* dllPathMem = VirtualAllocEx(processHandle, NULL, strlen(dllPath), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-        WriteProcessMemory(processHandle, dllPathMem, dllPath, strlen(dllPath), NULL);
-        auto k32 = GetModuleHandleA("kernel32.dll");
-        auto LLA = GetProcAddress(k32, "LoadLibraryA");
-        HANDLE remoteThread = CreateRemoteThread(processHandle, NULL, 0, (LPTHREAD_START_ROUTINE)LLA, dllPathMem, 0, NULL);
-        DWORD exitCode = STILL_ACTIVE;
-        while (exitCode == STILL_ACTIVE)
-        {
-            GetExitCodeThread(remoteThread, &exitCode);
-        }
-        VirtualFreeEx(processHandle, dllPathMem, strlen(dllPath), MEM_RESET);
-        CloseHandle(processHandle);
 
         if (processHandle == NULL)
         {
