@@ -90,7 +90,6 @@ namespace method1
             return false;
         }
 
-        std::cout << "started nuking at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 3) << ">\n";
 
         WriteProcessMemory(processHandle, shellcodeMem, shellcode, sizeof(shellcode), NULL);
         WriteProcessMemory(processHandle, shellcodeMem, &szDllPathMem, sizeof(void*), NULL);
@@ -101,10 +100,10 @@ namespace method1
         WriteProcessMemory(processHandle, szGetProcAddressMem, szGetProcAddress, strlen(szGetProcAddress), NULL);
         WriteProcessMemory(processHandle, szLoadLibraryWMem, szLoadLibraryW, strlen(szLoadLibraryW), NULL);
 
+        std::cout << "shellcode inserted at <" << (void*)((DWORD64)shellcodeMem + sizeof(void*) * 3) << ">\n";
 
 #ifdef NDEBUG
-        std::cout << "press <Enter> to execute shellcode\n";
-        while (!GetAsyncKeyState(VK_RETURN)) {};
+        system("pause");
 #endif
 
 #ifdef _DEBUG

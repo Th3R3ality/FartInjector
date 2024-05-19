@@ -56,8 +56,9 @@ int main( int argc, char** argv)
 
     DWORD pidSelection = 0;
     std::cin >> pidSelection;
-    if (!(pidSelection < pids.size() && pidSelection < 0))
+    if (!(pidSelection < pids.size()) || pidSelection < 0)
     {
+        
         std::cout << "<unknown target>\n";
         DebugBreak();
         return 2;
